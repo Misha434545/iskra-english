@@ -1,0 +1,67 @@
+name: Збірка APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'www/words.json'
+      - 'README.md'
+      - 'tools/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Встановити залежності
+        run: npm ci
+
+      - name: Підставити адресу файлу зі словами
+        run: sed -i "s#__REPO__#${GITHUB_REPOSITORY}#; s#__BRANCH__#${GITHUB_REF_NAME}#" www/config.js
+
+      - name: Синхронізувати вебчастину з Android
+        run: npx cap sync android
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Зібрати APK
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleRelease -PversionCode=${{ github.run_number }}
+
+      - name: Зберегти APK як артефакт запуску
+        uses: actions/upload-artifact@v4
+        with:
+          name: iskra-english-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Опублікувати APK для скачування
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk iskra-english.apk
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest iskra-english.apk \
+            --target "${GITHUB_SHA}" \
+            --title "Англійська з Іскрою (збірка ${{ github.run_number }})" \
+            --notes "Останній APK. Завантаж iskra-english.apk на планшет і встанови."
