@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Англійська з Іскрою</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+html{-webkit-text-size-adjust:100%}
+/* Layout: one narrow column, phone first. Home = mascot + flame streak card + 30-day flame grid. Lesson = word cards, then 8 tap-to-answer questions. */
+:root{
+  --bg:#F3F2FF; --surface:#FFFFFF; --ink:#1E1B4B; --muted:#5B5A86; --line:#D9D6F3;
+  --primary:#4B3FE0; --on-primary:#FFFFFF;
+  --flame:#FF7A1A; --flame-2:#FFC53D; --flame-in:#FFEDB5; --on-flame:#5A2300;
+  --ember:#DCD9F4; --ember-2:#C9C5EC;
+  --good:#1B8F5A; --good-bg:#DDF5E8; --bad:#D63A44; --bad-bg:#FDE4E5;
+  --fox:#FF8A2B; --fox-2:#E8700F; --cream:#FFF3E0; --ink-fox:#2A1B4D; --inner:#F5A9A0; --spark:#FFD23F; --blush:#FF9C8A;
+  --disp:'Rubik',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14122B; --surface:#201D45; --ink:#F2F0FF; --muted:#ADAADB; --line:#363168;
+    --primary:#9189FF; --on-primary:#14122B; --ember:#363168; --ember-2:#2A2655;
+    --good:#4ADE9A; --good-bg:#12392B; --bad:#FF7A82; --bad-bg:#46202A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14122B; --surface:#201D45; --ink:#F2F0FF; --muted:#ADAADB; --line:#363168;
+  --primary:#9189FF; --on-primary:#14122B; --ember:#363168; --ember-2:#2A2655;
+  --good:#4ADE9A; --good-bg:#12392B; --bad:#FF7A82; --bad-bg:#46202A; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  background:var(--bg); color:var(--ink); font:500 16px/1.45 var(--body);
+  padding-top:calc(12px + max(env(safe-area-inset-top,0px),var(--safe-area-inset-top,0px)));
+  padding-bottom:calc(12px + max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,0px)));
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-tap-highlight-color:transparent;
+}
+#app{max-width:480px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+h1,h2,h3,p{margin:0}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:24px;padding:16px}
+.screen{display:grid;gap:16px}
+
+/* header */
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.head h1{font:700 20px/1.2 var(--disp)}
+.icon{width:44px;height:44px;border-radius:14px;border:2px solid var(--line);background:var(--surface);font-size:20px;cursor:pointer;display:grid;place-items:center}
+
+/* buttons */
+.btn{min-height:56px;border-radius:18px;border:0;padding:0 22px;background:var(--primary);color:var(--on-primary);font:700 18px/1.1 var(--disp);cursor:pointer;width:100%}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn.done{background:var(--good-bg);color:var(--good);cursor:default}
+.btn.prize{background:var(--flame);color:var(--on-flame)}
+.btn.small{width:auto;min-height:48px;padding:0 18px;font-size:16px}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;font:700 14px var(--body);cursor:pointer;padding:8px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:center}
+.bubble{position:relative;background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:14px 16px;font:700 17px/1.35 var(--body)}
+.bubble::before{content:"";position:absolute;left:-9px;top:50%;width:14px;height:14px;background:var(--surface);border-left:2px solid var(--line);border-bottom:2px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+.namebox{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.namebox input,.field input{flex:1;min-width:0;min-height:48px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font:700 17px var(--body);padding:0 14px}
+
+/* mascot */
+.mascot{display:block;flex:none}
+.f-fox{fill:var(--fox)} .f-fox2{fill:var(--fox-2)} .f-cream{fill:var(--cream)} .f-ink{fill:var(--ink-fox)}
+.f-inner{fill:var(--inner)} .f-spark{fill:var(--spark)} .f-blush{fill:var(--blush)} .f-white{fill:#fff}
+.s-ink{stroke:var(--ink-fox);stroke-width:5;stroke-linecap:round;fill:none}
+
+/* streak */
+.streak{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.bigflame{position:relative;width:104px;height:130px}
+.bigflame svg{width:100%;height:100%;display:block;transform-origin:50% 100%}
+.bigflame b{position:absolute;left:0;right:0;bottom:17%;text-align:center;font:800 40px/1 var(--disp);color:var(--on-flame)}
+.bigflame.cold b{color:var(--muted)}
+.streak .lbl{font:700 17px/1.2 var(--body);color:var(--muted)}
+.meter{height:14px;border-radius:99px;background:var(--ember);overflow:hidden;margin:10px 0 8px}
+.meter i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--flame),var(--flame-2))}
+.goal{font:800 16px/1.3 var(--body)}
+.fl-lit{fill:url(#gFlame)} .fl-in{fill:var(--flame-in)} .fl-off{fill:var(--ember)}
+.fl-in-off{fill:var(--ember-2)}
+
+/* day grid */
+.days-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.days-h h2{font:700 18px var(--disp)}
+.days-h span{color:var(--muted);font-weight:700;font-size:14px}
+.days{display:grid;grid-template-columns:repeat(6,1fr);gap:8px 4px}
+.cell{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.cell svg{width:100%;max-width:38px;height:auto;display:block}
+.cell span{font:700 12px/1 var(--body);color:var(--muted)}
+.cell.ms span{color:var(--ink);font-weight:900;font-size:13px}
+.cell.next .fl-off{fill:none;stroke:var(--flame);stroke-width:8;stroke-dasharray:16 12}
+.foot{color:var(--muted);font-size:13px;text-align:center}
+
+/* lesson */
+.topbar{display:flex;align-items:center;gap:12px}
+.topbar h2{font:700 18px/1.2 var(--disp);flex:1}
+.bar{flex:1;height:14px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--flame);transition:width .3s}
+.words{display:grid;gap:10px}
+.word{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 14px}
+.word .em{font-size:40px;line-height:1;width:52px;text-align:center}
+.word .en{font:700 26px/1.1 var(--disp)}
+.word .uk{color:var(--muted);font-weight:700;font-size:16px}
+.spk{width:52px;height:52px;border-radius:50%;border:2px solid var(--line);background:var(--bg);font-size:22px;cursor:pointer}
+.qlabel{font:800 14px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center}
+.prompt{display:grid;justify-items:center;gap:6px;padding:20px 16px}
+.prompt .big{font-size:84px;line-height:1.05}
+.prompt .w{display:flex;align-items:center;gap:12px;font:700 34px/1.1 var(--disp)}
+.opts{display:grid;gap:10px}
+.opt{min-height:62px;border-radius:18px;border:2px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 16px;cursor:pointer;text-align:center}
+.opt.en{font:600 24px/1.15 var(--disp)}
+.opt.uk{font:800 21px/1.2 var(--body)}
+.opt:active{transform:scale(.98)}
+.opt:disabled{opacity:.5;cursor:default}
+.opt.ok{border-color:var(--good);background:var(--good-bg);opacity:1}
+.opt.bad{border-color:var(--bad);background:var(--bad-bg);opacity:.9}
+.coach{display:flex;align-items:center;gap:10px;min-height:76px}
+.coach .bubble{font-size:16px;padding:10px 14px}
+
+/* result */
+.result{display:grid;justify-items:center;gap:14px;text-align:center;padding-top:8px}
+.result h2{font:800 28px/1.15 var(--disp)}
+.stars{display:flex;gap:6px}
+.stars span{font-size:46px;line-height:1;color:var(--ember)}
+.stars span.on{color:var(--flame)}
+.prizebox{display:grid;justify-items:center;gap:12px;text-align:center;padding:24px 16px}
+.prizebox .gift{font-size:72px;line-height:1}
+.prizebox h2{font:800 28px/1.15 var(--disp)}
+.date{font:700 15px var(--body);color:var(--muted)}
+
+.field{display:grid;gap:8px}
+.field label{font-weight:800}
+.danger p{margin-bottom:12px;color:var(--muted)}
+
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+@media (prefers-reduced-motion: no-preference){
+  .bigflame.lit svg{animation:flick 1.6s ease-in-out infinite}
+  .cell.next svg{animation:pulse 1.4s ease-in-out infinite}
+  .hop{animation:hop .7s ease-in-out infinite}
+  .opt.bad{animation:shake .35s}
+  .ignite svg{animation:ignite .9s cubic-bezier(.2,1.4,.4,1) both}
+}
+@keyframes flick{0%,100%{transform:scale(1,1) rotate(-1.5deg)}50%{transform:scale(1.04,.97) rotate(1.5deg)}}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@keyframes ignite{0%{transform:scale(.1);opacity:0}70%{transform:scale(1.18);opacity:1}100%{transform:scale(1)}}
+@media (min-width:700px){#app{zoom:1.25;max-width:560px}}
+.test{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.test .em{font-size:40px;line-height:1}
+.test h3{font:700 18px/1.2 var(--disp)}
+.test p{color:var(--muted);font-size:14px}
+.test .btn{grid-column:1/-1}
+.tests{display:grid;gap:8px}
+.trow{display:flex;justify-content:space-between;gap:12px;font-weight:800}
+.trow span:last-child{color:var(--flame)}
+.score{font:800 40px/1 var(--disp)}
+</style>
+</head>
+<body>
+<script src="config.js"></script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gFlame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" style="stop-color:var(--flame)"/>
+      <stop offset="1" style="stop-color:var(--flame-2)"/>
+    </linearGradient>
+  </defs>
+</svg>
+<canvas id="fx" aria-hidden="true"></canvas>
+<main id="app"></main>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Settings ---------- */
+var GOAL = 30;                       // days in a row needed for the prize
+var KEY  = 'iskra-english-v1';
+
+/* ---------- Lessons: filled from words.json ---------- */
+var LESSONS = [], ALL = [], EXTRA = {}, TEST_DAY = 25;
+
+var PRAISE = ['Супер!','Так!','Молодець!','Правильно!','Ого, круто!','Відмінно!'];
+var RETRY  = ['Спробуй ще!','Майже!','Ще раз, ти зможеш!'];
+
+/* ---------- Helpers ---------- */
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function plural(n,f){ var a=Math.abs(n)%100,b=a%10; if(a>10&&a<20) return f[2]; if(b>1&&b<5) return f[1]; if(b===1) return f[0]; return f[2]; }
+function days(n){ return n+' '+plural(n,['день','дні','днів']); }
+function rand(a){ return a[Math.floor(Math.random()*a.length)]; }
+function shuffle(a,rng){ var r=rng||Math.random,x=a.slice(),i,j,t; for(i=x.length-1;i>0;i--){ j=Math.floor(r()*(i+1)); t=x[i]; x[i]=x[j]; x[j]=t; } return x; }
+function seeded(seed){ var s=seed>>>0; return function(){ s+=0x6D2B79F5; var t=s; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return((t^(t>>>14))>>>0)/4294967296; }; }
+function today(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function dayNum(s){ var p=s.split('-').map(Number); return Math.round(Date.UTC(p[0],p[1]-1,p[2])/86400000); }
+function fmtDate(s){ var p=s.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; }
+
+/* ---------- Android widget bridge (does nothing in a browser) ---------- */
+var Bridge=null;
+try{ if(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) Bridge=window.Capacitor.registerPlugin('IskraBridge'); }catch(e){}
+function pushWidget(){
+  if(!Bridge) return;
+  try{ var p=Bridge.updateWidget({streak:S.streak,goal:GOAL,last:S.last,earned:!!S.earned}); if(p&&p.catch) p.catch(function(){}); }catch(e){}
+}
+
+/* ---------- State (kept in this browser) ---------- */
+var memory = null;
+function blank(){ return {name:'',askedName:false,done:0,streak:0,best:0,last:'',earned:'',broke:false,hist:[],tests:{}}; }
+function load(){
+  var s=null;
+  try{ s=JSON.parse(localStorage.getItem(KEY)); }catch(e){ s=memory; }
+  return Object.assign(blank(), s||{});
+}
+function save(){ memory=JSON.parse(JSON.stringify(S)); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} pushWidget(); }
+var S = load();
+
+/* A missed day puts the flame out. After the prize is earned it stays lit. */
+function sync(){
+  var t=today();
+  if(S.last && !S.earned && S.streak>0 && dayNum(t)-dayNum(S.last)>1){ S.streak=0; S.broke=true; save(); }
+}
+function practiceWords(t){
+  return shuffle(ALL,seeded(dayNum(t))).slice(0,4);
+}
+function getLesson(){
+  var t=today(), done=(S.last===t), idx=done?S.done-1:S.done;
+  if(idx<LESSONS.length) return {n:idx+1,title:LESSONS[idx].t,words:LESSONS[idx].w,repeat:done};
+  return {n:idx+1,title:'Повторення',words:practiceWords(t),repeat:done};
+}
+function complete(){
+  var t=today();
+  if(S.last===t) return false;
+  if(S.done<LESSONS.length) S.hist.push({m:t.slice(0,7),i:S.done});
+  S.streak+=1; S.done+=1; S.last=t; S.best=Math.max(S.best,S.streak); S.broke=false;
+  if(S.streak>=GOAL && !S.earned) S.earned=t;
+  save(); return true;
+}
+
+/* ---------- Pictures ---------- */
+var FL_OUT='M60 6 C66 36 104 52 104 96 C104 126 84 144 60 144 C36 144 16 126 16 96 C16 76 28 64 36 52 C38 66 44 72 50 72 C48 48 52 28 60 6 Z';
+var FL_IN ='M60 70 C64 88 82 94 82 114 C82 128 72 138 60 138 C48 138 38 128 38 114 C38 102 46 94 52 86 C54 94 57 95 60 92 C58 82 58 76 60 70 Z';
+function flame(lit){
+  return '<svg viewBox="0 0 120 150" aria-hidden="true"><path class="'+(lit?'fl-lit':'fl-off')+'" d="'+FL_OUT+'"/><path class="'+(lit?'fl-in':'fl-in-off')+'" d="'+FL_IN+'"/></svg>';
+}
+function miniFlame(cls){
+  return '<svg viewBox="0 0 120 150" aria-hidden="true"><path class="'+(cls==='lit'?'fl-lit':'fl-off')+'" d="'+FL_OUT+'"/>'+(cls==='lit'?'<path class="fl-in" d="'+FL_IN+'"/>':'')+'</svg>';
+}
+function mascot(mood,size){
+  var cheer=mood==='cheer', sad=mood==='sad', eyes, mouth, arms;
+  if(cheer){
+    eyes='<path class="s-ink" d="M66 84 Q76 70 86 84"/><path class="s-ink" d="M114 84 Q124 70 134 84"/>';
+    mouth='<path class="f-ink" d="M84 110 Q100 138 116 110 Z"/><ellipse class="f-blush" cx="100" cy="124" rx="7" ry="4"/>';
+    arms='<ellipse class="f-fox2" cx="50" cy="124" rx="9" ry="20" transform="rotate(-30 50 124)"/><ellipse class="f-fox2" cx="150" cy="124" rx="9" ry="20" transform="rotate(30 150 124)"/>';
+  }else{
+    eyes='<circle class="f-ink" cx="76" cy="82" r="8"/><circle class="f-ink" cx="124" cy="82" r="8"/><circle class="f-white" cx="79" cy="79" r="3"/><circle class="f-white" cx="127" cy="79" r="3"/>'+
+         (sad?'<path class="s-ink" d="M64 68 L86 62"/><path class="s-ink" d="M136 68 L114 62"/>':'');
+    mouth=sad?'<path class="s-ink" d="M90 124 Q100 112 110 124"/>':'<path class="s-ink" d="M88 112 Q100 125 112 112"/>';
+    arms='<ellipse class="f-fox2" cx="62" cy="150" rx="9" ry="20" transform="rotate(12 62 150)"/><ellipse class="f-fox2" cx="138" cy="150" rx="9" ry="20" transform="rotate(-12 138 150)"/>';
+  }
+  return '<svg class="mascot'+(cheer?' hop':'')+'" viewBox="0 0 200 200" width="'+size+'" height="'+size+'" role="img" aria-label="Лисеня Іскра">'+
+    '<ellipse class="f-fox" cx="152" cy="150" rx="30" ry="14" transform="rotate(-50 152 150)"/>'+
+    '<ellipse class="f-cream" cx="172" cy="124" rx="11" ry="8" transform="rotate(-50 172 124)"/>'+
+    '<ellipse class="f-fox2" cx="82" cy="186" rx="15" ry="8"/><ellipse class="f-fox2" cx="118" cy="186" rx="15" ry="8"/>'+
+    '<ellipse class="f-fox" cx="100" cy="150" rx="40" ry="38"/><ellipse class="f-cream" cx="100" cy="158" rx="24" ry="26"/>'+
+    arms+
+    '<polygon class="f-fox" points="50,62 44,14 88,44"/><polygon class="f-inner" points="57,52 54,28 76,44"/>'+
+    '<polygon class="f-fox" points="150,62 156,14 112,44"/><polygon class="f-inner" points="143,52 146,28 124,44"/>'+
+    '<ellipse class="f-fox" cx="100" cy="88" rx="56" ry="48"/>'+
+    '<path class="f-spark" d="M100 34 C106 42 110 47 105 54 C103 51 102 49 100 48 C98 49 97 51 95 54 C90 47 94 42 100 34 Z"/>'+
+    '<ellipse class="f-cream" cx="70" cy="112" rx="28" ry="20"/><ellipse class="f-cream" cx="130" cy="112" rx="28" ry="20"/><ellipse class="f-cream" cx="100" cy="116" rx="22" ry="18"/>'+
+    '<circle class="f-blush" cx="56" cy="98" r="6" opacity=".6"/><circle class="f-blush" cx="144" cy="98" r="6" opacity=".6"/>'+
+    eyes+'<ellipse class="f-ink" cx="100" cy="101" rx="7" ry="5"/>'+mouth+
+    '</svg>';
+}
+
+/* ---------- Speech & confetti ---------- */
+function say(text){
+  try{ var s=window.speechSynthesis; if(!s) return; s.cancel(); var u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=.85; s.speak(u); }catch(e){}
+}
+function confetti(){
+  try{
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var c=document.getElementById('fx'), x=c.getContext('2d'); c.width=window.innerWidth; c.height=window.innerHeight;
+    var cols=['#FF7A1A','#FFC53D','#5B4DFF','#22A06B','#FF5C8A'], ps=[], i, f=0;
+    for(i=0;i<90;i++) ps.push({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:4+Math.random()*5,c:cols[i%cols.length],a:Math.random()*6});
+    (function tick(){
+      x.clearRect(0,0,c.width,c.height);
+      ps.forEach(function(p){ p.x+=p.vx; p.y+=p.vy; p.a+=.15; x.fillStyle=p.c; x.save(); x.translate(p.x,p.y); x.rotate(p.a); x.fillRect(-p.r,-p.r/2,p.r*2,p.r); x.restore(); });
+      if(++f<180) requestAnimationFrame(tick); else x.clearRect(0,0,c.width,c.height);
+    })();
+  }catch(e){}
+}
+
+/* ---------- Views ---------- */
+var app=document.getElementById('app');
+var view='home', lesson=null, quiz=null, res=null, resetArmed=false;
+
+function homeView(){
+  sync();
+  if(!LESSONS.length) return '<div class="card"><h2>Не вдалося завантажити уроки</h2><p>Закрий і відкрий застосунок ще раз.</p></div>';
+  var t=today(), done=(S.last===t), L=getLesson(), name=S.name?esc(S.name):'друже';
+  var mood='hello', msg;
+  if(!S.name && !S.askedName) msg='Привіт! Я Іскра. Як тебе звати?';
+  else if(S.earned){ mood='cheer'; msg='Ти молодець, '+name+'! Robux чекають на тебе!'; }
+  else if(done){ mood='cheer'; msg='На сьогодні все, '+name+'! Побачимось завтра.'; }
+  else if(S.broke){ mood='sad'; msg='Ой, вогник згас… Давай запалимо його знову!'; }
+  else if(S.streak===0) msg='Привіт, '+name+'! Давай запалимо перший вогник!';
+  else msg='Вогник горить уже '+days(S.streak)+'. Не дай йому згаснути!';
+
+  var nameBox='';
+  if(!S.name && !S.askedName){
+    nameBox='<div class="namebox"><input id="name-in" placeholder="Твоє ім’я" maxlength="20" autocomplete="off"><button class="btn small" data-a="savename">Привіт!</button></div><button class="link" data-a="skipname">Пропустити</button>';
+  }
+
+  var left=Math.max(0,GOAL-S.streak), pct=Math.min(100,S.streak/GOAL*100);
+  var goalText=S.earned?'Мета виконана! 🎁':'Ще '+days(left)+' — і Robux твої!';
+
+  var cells='', d, cls, ms;
+  for(d=1;d<=GOAL;d++){
+    cls=d<=S.streak?'lit':((!done && d===S.streak+1)?'next':'off');
+    ms=(d===7||d===14||d===21||d===GOAL);
+    cells+='<div class="cell '+cls+(ms?' ms':'')+'" role="listitem" aria-label="День '+d+(cls==='lit'?', вогник горить':'')+'">'+miniFlame(cls)+'<span>'+(d===GOAL?'🎁':d)+'</span></div>';
+  }
+
+  var cta;
+  if(S.earned) cta='<button class="btn prize" data-a="prize">🎁 Забрати Robux</button>';
+  else if(done) cta='<button class="btn done" disabled>Урок на сьогодні готовий ✓</button>';
+  else cta='<button class="btn" data-a="learn">Урок '+L.n+': '+esc(L.title)+'</button>';
+  var extra=(done&&!S.earned)?'<button class="btn ghost" data-a="learn">Повторити слова</button>':'';
+  if(S.earned && !done) extra='<button class="btn ghost" data-a="learn">Урок '+L.n+': '+esc(L.title)+'</button>';
+
+  return '<div class="head"><h1>Англійська з Іскрою</h1><button class="icon" data-a="settings" aria-label="Налаштування">⚙️</button></div>'+
+    '<div class="hero">'+mascot(mood,128)+'<div class="bubble">'+msg+nameBox+'</div></div>'+
+    '<section class="card streak" aria-label="Мої вогники">'+
+      '<div class="bigflame '+(S.streak>0?'lit':'cold')+'">'+flame(S.streak>0)+'<b>'+S.streak+'</b></div>'+
+      '<div><div class="lbl">'+plural(S.streak,['день','дні','днів'])+' поспіль</div><div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="'+GOAL+'" aria-valuenow="'+Math.min(S.streak,GOAL)+'"><i style="width:'+pct+'%"></i></div><div class="goal">'+goalText+'</div></div>'+
+    '</section>'+
+    cta+extra+testHTML()+
+    '<section class="card"><div class="days-h"><h2>Мої '+GOAL+' вогників</h2><span>рекорд: '+S.best+'</span></div><div class="days" role="list">'+cells+'</div></section>'+
+    testsHistory()+
+    '<p class="foot">Один урок на день, приблизно п’ять хвилин. Прогрес зберігається на цьому телефоні.</p>';
+}
+
+function learnView(){
+  var rows=lesson.words.map(function(w){
+    return '<div class="card word"><div class="em">'+w[0]+'</div><div><div class="en">'+esc(w[1])+'</div><div class="uk">'+esc(w[2])+'</div></div><button class="spk" data-a="say" data-t="'+esc(w[1])+'" aria-label="Послухати: '+esc(w[1])+'">🔊</button></div>';
+  }).join('');
+  return '<div class="topbar"><button class="icon" data-a="home" aria-label="Назад">←</button><h2>Урок '+lesson.n+': '+esc(lesson.title)+'</h2></div>'+
+    '<p class="qlabel">Послухай і запам’ятай</p><div class="words">'+rows+'</div>'+
+    '<button class="btn" data-a="quizstart">Перевіримо!</button>';
+}
+
+function quizView(){
+  var q=quiz.qs[quiz.i], total=quiz.qs.length, en=(q.type==='en2uk');
+  var prompt=en
+    ? '<div class="big">'+q.w[0]+'</div><div class="w">'+esc(q.w[1])+'<button class="spk" data-a="say" data-t="'+esc(q.w[1])+'" aria-label="Послухати">🔊</button></div>'
+    : '<div class="big">'+q.w[0]+'</div>';
+  var opts=q.opts.map(function(o,k){ return '<button class="opt '+(en?'uk':'en')+'" data-a="pick" data-k="'+k+'">'+esc(o.text)+'</button>'; }).join('');
+  return '<div class="topbar"><button class="icon" data-a="home" aria-label="Закрити">✕</button><div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="'+total+'" aria-valuenow="'+quiz.i+'"><i style="width:'+(quiz.i/total*100)+'%"></i></div></div>'+
+    '<p class="qlabel">'+(en?'Що це означає?':'Як це по-англійськи?')+'</p>'+
+    '<div class="card prompt">'+prompt+'</div><div class="opts">'+opts+'</div>'+
+    '<div class="coach" id="coach">'+coachHTML()+'</div>';
+}
+function coachHTML(){ return mascot(quiz.mood,72)+'<div class="bubble">'+quiz.msg+'</div>'; }
+
+function resultView(){
+  if(res.test){
+    var r=res.score/res.total, ts=r>=.9?3:(r>=.6?2:1);
+    var tstars=[1,2,3].map(function(n){ return '<span class="'+(n<=ts?'on':'')+'">★</span>'; }).join('');
+    return '<div class="result"><h2>Тест за '+monthName(res.month)+' пройдено!</h2>'+
+      '<div class="stars" role="img" aria-label="'+ts+' з 3 зірок">'+tstars+'</div>'+
+      '<div class="score">'+res.score+' з '+res.total+'</div>'+
+      mascot('cheer',104)+'<p>Це відповіді з першої спроби. Нові слова вже чекають!</p>'+
+      '<button class="btn" data-a="home">Готово</button></div>';
+  }
+  var st=quiz.first>=7?3:(quiz.first>=5?2:1);
+  var stars=[1,2,3].map(function(n){ return '<span class="'+(n<=st?'on':'')+'">★</span>'; }).join('');
+  var title=res.gained?'Вогник запалено!':'Гарне повторення!';
+  var sub=res.gained?('Це вже '+days(S.streak)+' поспіль. Так тримати!'):'Сьогоднішній вогник уже горить. Повторення — мати навчання!';
+  return '<div class="result"><h2>'+title+'</h2>'+
+    '<div class="stars" role="img" aria-label="'+st+' з 3 зірок">'+stars+'</div>'+
+    '<div class="bigflame lit ignite"><div>'+flame(true)+'</div><b>'+S.streak+'</b></div>'+
+    mascot('cheer',104)+'<p>'+sub+'</p>'+
+    '<button class="btn" data-a="resultdone">'+(res.prize?'Далі 🎁':'Готово')+'</button></div>';
+}
+
+function prizeView(){
+  var nm=S.name?', '+esc(S.name):'';
+  return '<div class="topbar"><button class="icon" data-a="home" aria-label="Назад">←</button><h2>Твій приз</h2></div>'+
+    '<div class="card prizebox"><div class="gift">🎁</div>'+mascot('cheer',120)+
+    '<h2>'+GOAL+' вогників'+nm+'!</h2>'+
+    '<p>Ти вчила англійську '+GOAL+' днів поспіль. Покажи цей екран — час отримати Robux!</p>'+
+    '<p class="date">Вогник №'+GOAL+' загорівся '+fmtDate(S.earned||today())+'</p></div>';
+}
+
+function settingsView(){
+  return '<div class="topbar"><button class="icon" data-a="home" aria-label="Назад">←</button><h2>Налаштування</h2></div>'+
+    '<div class="card field"><label for="name-in">Ім’я</label><div class="namebox" style="margin:0"><input id="name-in" value="'+esc(S.name)+'" maxlength="20" autocomplete="off"><button class="btn small" data-a="savename">Зберегти</button></div></div>'+
+    '<div class="card danger"><p>Почати все спочатку: усі вогники й уроки зникнуть.</p><button class="btn ghost" data-a="reset" id="reset-btn">Стерти прогрес</button></div>';
+}
+
+function render(){
+  var h='';
+  if(view==='home') h=homeView();
+  else if(view==='learn') h=learnView();
+  else if(view==='quiz') h=quizView();
+  else if(view==='result') h=resultView();
+  else if(view==='prize') h=prizeView();
+  else if(view==='settings') h=settingsView();
+  app.innerHTML=h;
+}
+function go(v,fromPop){
+  view=v; render(); window.scrollTo(0,0);
+  if(!fromPop && v!=='home'){
+    try{ if(history.state && history.state.v) history.replaceState({v:v},''); else history.pushState({v:v},''); }catch(e){}
+  }
+}
+function goHome(){
+  resetArmed=false;
+  if(history.state && history.state.v){ try{ history.back(); return; }catch(e){} }
+  go('home',true);
+}
+window.addEventListener('popstate',function(){ if(view!=='home'){ resetArmed=false; go('home',true); } });
+
+/* ---------- Quiz ---------- */
+function makeQ(type,w,words){
+  var key=(type==='en2uk')?2:1;
+  var others=shuffle(words.filter(function(x){ return x!==w; })).slice(0,2);
+  var opts=shuffle([w].concat(others)).map(function(x){ return {text:x[key],ok:x===w}; });
+  return {type:type,w:w,opts:opts,tried:false};
+}
+function buildQuiz(words){
+  var qs=[], i, tries, ok, j;
+  words.forEach(function(w){ qs.push(makeQ('en2uk',w,words)); qs.push(makeQ('pic2en',w,words)); });
+  for(tries=0;tries<60;tries++){
+    qs=shuffle(qs); ok=true;
+    for(j=1;j<qs.length;j++){ if(qs[j].w===qs[j-1].w){ ok=false; break; } }
+    if(ok) break;
+  }
+  return qs;
+}
+function startQuiz(){
+  quiz={qs:buildQuiz(lesson.words),i:0,first:0,locked:false,mood:'hello',msg:'Ти впораєшся!',mode:'lesson'};
+  go('quiz');
+}
+function setCoach(mood,msg){
+  quiz.mood=mood; quiz.msg=msg;
+  var c=document.getElementById('coach'); if(c) c.innerHTML=coachHTML();
+}
+function pick(btn){
+  if(!quiz||quiz.locked) return;
+  var q=quiz.qs[quiz.i], o=q.opts[Number(btn.dataset.k)];
+  if(o.ok){
+    quiz.locked=true; btn.classList.add('ok');
+    if(!q.tried) quiz.first++;
+    say(q.w[1]); setCoach('cheer',rand(PRAISE));
+    Array.prototype.forEach.call(document.querySelectorAll('.opt'),function(b){ b.disabled=true; });
+    try{ if(navigator.vibrate) navigator.vibrate(15); }catch(e){}
+    setTimeout(next,1100);
+  }else{
+    q.tried=true; btn.classList.add('bad'); btn.disabled=true; setCoach('sad',rand(RETRY));
+  }
+}
+function next(){
+  if(view!=='quiz') return;
+  quiz.i++;
+  if(quiz.i>=quiz.qs.length){ finish(); return; }
+  quiz.locked=false; quiz.mood='hello'; quiz.msg='Ти впораєшся!';
+  render();
+}
+function finish(){
+  if(quiz.mode==='test'){ finishTest(); return; }
+  var gained=complete();
+  res={gained:gained,prize:gained&&S.earned===today()&&S.streak===GOAL};
+  go('result'); confetti();
+}
+
+/* ---------- Monthly test ---------- */
+var MONTHS=['січень','лютий','березень','квітень','травень','червень','липень','серпень','вересень','жовтень','листопад','грудень'];
+function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function monthName(key){ return MONTHS[Number(key.slice(5,7))-1]; }
+function pendingTest(){
+  var d=new Date(), cur=monthKey(d), prev=monthKey(new Date(d.getFullYear(),d.getMonth()-1,1));
+  function ready(m){ return !S.tests[m] && S.hist.some(function(h){ return h.m===m; }); }
+  if(d.getDate()>=TEST_DAY && ready(cur)) return cur;
+  if(ready(prev)) return prev;
+  return '';
+}
+function testPool(m){
+  var seen={}, pool=[];
+  function add(w){ if(!seen[w[1]]){ seen[w[1]]=1; pool.push(w); } }
+  S.hist.forEach(function(h){ if(h.m===m && LESSONS[h.i]) LESSONS[h.i].w.forEach(add); });
+  (EXTRA[m]||[]).forEach(add);
+  if(pool.length<4) shuffle(ALL).forEach(function(w){ if(pool.length<4) add(w); });
+  return pool;
+}
+function buildTest(m){
+  var pool=testPool(m);
+  return shuffle(pool).slice(0,10).map(function(w){ return makeQ(Math.random()<.5?'en2uk':'pic2en',w,pool); });
+}
+function startTest(){
+  var m=pendingTest(); if(!m) return;
+  quiz={qs:buildTest(m),i:0,first:0,locked:false,mood:'hello',msg:'Це тест місяця. Ти впораєшся!',mode:'test',month:m};
+  go('quiz');
+}
+function finishTest(){
+  var total=quiz.qs.length;
+  S.tests[quiz.month]={score:quiz.first,total:total,date:today()}; save();
+  res={test:true,month:quiz.month,score:quiz.first,total:total};
+  go('result'); confetti();
+}
+function testHTML(){
+  var m=pendingTest(); if(!m) return '';
+  var n=Math.min(10,testPool(m).length);
+  return '<section class="card test"><div class="em">📝</div><div><h3>Тест місяця: '+monthName(m)+'</h3><p>'+n+' '+plural(n,['питання','питання','питань'])+' про слова, які ти вивчила</p></div><button class="btn" data-a="teststart">Почати тест</button></section>';
+}
+function testsHistory(){
+  var keys=Object.keys(S.tests).sort().reverse(); if(!keys.length) return '';
+  var rows=keys.slice(0,6).map(function(k){
+    var t=S.tests[k], r=t.score/t.total, st=r>=.9?'★★★':(r>=.6?'★★':'★');
+    return '<div class="trow"><span>'+monthName(k)+'</span><span>'+t.score+' з '+t.total+' '+st+'</span></div>';
+  }).join('');
+  return '<section class="card"><div class="days-h"><h2>Мої тести</h2></div><div class="tests">'+rows+'</div></section>';
+}
+
+/* ---------- Events ---------- */
+function saveName(){
+  var inp=document.getElementById('name-in'); if(!inp) return;
+  S.name=inp.value.trim().slice(0,20); S.askedName=true; save(); goHome();
+}
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-a]'); if(!el) return;
+  var a=el.dataset.a;
+  if(a==='say') say(el.dataset.t);
+  else if(a==='home') goHome();
+  else if(a==='settings') go('settings');
+  else if(a==='learn'){ lesson=getLesson(); go('learn'); }
+  else if(a==='quizstart') startQuiz();
+  else if(a==='pick') pick(el);
+  else if(a==='teststart') startTest();
+  else if(a==='savename') saveName();
+  else if(a==='skipname'){ S.askedName=true; save(); go('home'); }
+  else if(a==='resultdone'){ if(res&&res.prize){ go('prize'); confetti(); } else goHome(); }
+  else if(a==='prize'){ go('prize'); confetti(); }
+  else if(a==='reset'){
+    if(!resetArmed){
+      resetArmed=true; el.textContent='Точно? Натисни ще раз';
+      setTimeout(function(){ resetArmed=false; var b=document.getElementById('reset-btn'); if(b) b.textContent='Стерти прогрес'; },5000);
+    }else{
+      resetArmed=false; S=blank(); save(); goHome();
+    }
+  }
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter' && e.target && e.target.id==='name-in'){ e.preventDefault(); saveName(); }
+});
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden) return;
+  if(view==='home') render();
+  pushWidget(); refreshRemote(false);
+});
+
+/* ---------- Content: words.json (bundled copy + live copy from GitHub) ---------- */
+var CONTENT_KEY='iskra-content-v1', lastFetch=0, CFG=window.ISKRA_CONFIG||{};
+function validWord(w){ return Array.isArray(w) && w.length===3 && w.every(function(x){ return typeof x==='string' && x.length>0; }); }
+function validContent(c){
+  return !!c && Array.isArray(c.lessons) && c.lessons.length>0 && c.lessons.every(function(l){
+    return l && typeof l.t==='string' && Array.isArray(l.w) && l.w.length>=3 && l.w.every(validWord);
+  });
+}
+function applyContent(c){
+  LESSONS=c.lessons;
+  GOAL=Math.max(1,Number(c.goalDays)||30);
+  TEST_DAY=Math.min(28,Math.max(1,Number(c.testDay)||25));
+  EXTRA={};
+  if(c.monthlyTests && typeof c.monthlyTests==='object'){
+    Object.keys(c.monthlyTests).forEach(function(k){
+      var a=c.monthlyTests[k]; if(Array.isArray(a) && a.every(validWord)) EXTRA[k]=a;
+    });
+  }
+  ALL=[]; LESSONS.forEach(function(l){ l.w.forEach(function(w){ ALL.push(w); }); });
+}
+function readJSON(url){
+  return fetch(url,{cache:'no-store'}).then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); });
+}
+function refreshRemote(force){
+  var u=CFG.contentUrl; if(!u || u.indexOf('__')>-1) return;
+  var now=Date.now(); if(!force && now-lastFetch<600000) return; lastFetch=now;
+  readJSON(u+'?t='+now).then(function(c){
+    if(!validContent(c)) return;
+    var s=JSON.stringify(c), old=null; try{ old=localStorage.getItem(CONTENT_KEY); }catch(e){}
+    if(s===old) return;
+    try{ localStorage.setItem(CONTENT_KEY,s); }catch(e){}
+    applyContent(c); if(view==='home') render(); pushWidget();
+  }).catch(function(){});
+}
+function init(){
+  readJSON('words.json').then(function(c){ if(validContent(c)) applyContent(c); }).catch(function(){})
+  .then(function(){
+    try{ var r=JSON.parse(localStorage.getItem(CONTENT_KEY)); if(validContent(r)) applyContent(r); }catch(e){}
+    render(); pushWidget(); refreshRemote(true);
+  });
+}
+init();
+})();
+</script>
+</body>
+</html>
