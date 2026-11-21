@@ -1,0 +1,15 @@
+{
+  "name": "iskra-english",
+  "version": "1.0.0",
+  "description": "Англійська з Іскрою: щоденні уроки, вогник на 30 днів, місячний тест",
+  "scripts": {
+    "sync": "cap sync android",
+    "check": "node tools/validate.mjs www/words.json"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2"
+  },
+  "private": true
+}
